@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import "./App.css";
 import Header from "./Header";
@@ -12,6 +13,8 @@ function App() {
   const [countries, setCountries] = useState([]);
   const countriesInputRef = useRef();
   const regionRef = useRef();
+  const navigate = useNavigate();
+
   const noCountries = countries.status || countries.message;
 
   const switchMode = () => {
@@ -27,8 +30,13 @@ function App() {
   }, []);
 
   const fetchData = async () => {
-    const response = await fetch("https://restcountries.com/v3.1/all");
+    const response = await fetch("https://restcountries.com/v2/all");
     const data = await response.json();
+
+    if (data.status === 404) {
+      setCountries([]);
+      return;
+    }
 
     setCountries(data);
   };
@@ -39,7 +47,7 @@ function App() {
     if (searchValue.trim()) {
       const fetchSearch = async () => {
         const response = await fetch(
-          `https://restcountries.com/v3.1/name/${searchValue}`
+          `https://restcountries.com/v2/name/${searchValue}`
         );
         const data = await response.json();
 
@@ -56,7 +64,38 @@ function App() {
     }
   };
 
-  console.log(countries);
+  const selectRegion = () => {
+    const selectValue = regionRef.current.value;
+
+    if (selectValue.trim()) {
+      const fetchSelect = async () => {
+        const response = await fetch(
+          `https://restcountries.com/v2/region/${selectValue}`
+        );
+        const data = await response.json();
+
+        if (selectValue === "All") {
+          try {
+            fetchData();
+          } catch (error) {
+            console.log(error);
+          }
+          return;
+        }
+        setCountries(data);
+      };
+
+      try {
+        fetchSelect();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+
+  const showDetails = (code) => {
+    navigate(`/${code}`);
+  };
 
   return (
     <div className={`app ${darkMode ? "darkMode" : ""}`}>
@@ -78,13 +117,13 @@ function App() {
                   />
                 </div>
                 <div className={`select_region ${darkMode ? "darkMode" : ""}`}>
-                  <select ref={regionRef}>
-                    <option>Todos</option>
-                    <option>África</option>
-                    <option>Américas</option>
-                    <option>Ásia</option>
-                    <option>Europa</option>
-                    <option>Oceania</option>
+                  <select ref={regionRef} onChange={selectRegion}>
+                    <option value={"All"}>Todos</option>
+                    <option value={"africa"}>África</option>
+                    <option value={"americas"}>Américas</option>
+                    <option value={"asia"}>Ásia</option>
+                    <option value={"europe"}>Europa</option>
+                    <option value={"oceania"}>Oceania</option>
                   </select>
                 </div>
               </div>
@@ -93,13 +132,14 @@ function App() {
                 {!noCountries ? (
                   countries.map((country) => (
                     <Country
-                      key={country.ccn3}
-                      code={country.cca3}
-                      name={country.translations.por.common}
+                      key={country.alpha3Code}
+                      code={country.alpha3Code}
+                      name={country.name}
                       capital={country.capital}
                       population={country.population}
-                      region={country.subregion}
+                      region={country.region}
                       flag={country.flags.svg}
+                      showDetails={showDetails}
                       darkMode={darkMode}
                     />
                   ))
@@ -111,8 +151,14 @@ function App() {
           }
         />
         <Route
-          path="country-details"
-          element={<CountryDetails darkMode={darkMode} />}
+          path="/:countryCode"
+          element={
+            <CountryDetails
+              darkMode={darkMode}
+              countries={countries}
+              refetch={fetchData}
+            />
+          }
         />
       </Routes>
     </div>

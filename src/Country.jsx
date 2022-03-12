@@ -5,9 +5,19 @@ export default function Country({
   population,
   region,
   flag,
+  showDetails,
+  code
 }) {
+
+  const showDetailsHandler = () => {
+    showDetails(code);
+  }
+
   return (
-    <div className={`country ${darkMode ? "darkMode" : ""}`}>
+    <div
+      className={`country ${darkMode ? "darkMode" : ""}`}
+      onClick={showDetailsHandler}
+    >
       <div className="flag_container">
         <img src={flag} alt={name} />
       </div>
@@ -16,15 +26,21 @@ export default function Country({
         <h3 className="name">{name}</h3>
         <p>
           População:{" "}
-          <span className={`values ${darkMode ? "darkMode" : ""}`}>{population}</span>
+          <span className={`values ${darkMode ? "darkMode" : ""}`}>
+            {population}
+          </span>
         </p>
         <p>
           Continente:{" "}
-          <span className={`values ${darkMode ? "darkMode" : ""}`}>{region}</span>
+          <span className={`values ${darkMode ? "darkMode" : ""}`}>
+            {region}
+          </span>
         </p>
         <p>
           Capital:{" "}
-          <span className={`values ${darkMode ? "darkMode" : ""}`}>{capital}</span>
+          <span className={`values ${darkMode ? "darkMode" : ""}`}>
+            {capital}
+          </span>
         </p>
       </div>
     </div>

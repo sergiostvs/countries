@@ -22,7 +22,7 @@ function App() {
   const regionRef = useRef();
   const navigate = useNavigate();
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode] = useState(false);
   const [theme, setTheme] = usePeristedState("theme", light);
 
   const toggleTheme = () => {
@@ -30,10 +30,6 @@ function App() {
   };
 
   const noCountries = countries.status || countries.message;
-
-  const switchMode = () => {
-    setDarkMode((prevState) => !prevState);
-  };
 
   useEffect(() => {
     try {

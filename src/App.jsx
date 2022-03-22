@@ -1,19 +1,33 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import "./App.css";
-import Header from "./Header";
+import { ThemeProvider } from "styled-components";
+import usePeristedState from "./utils/usePersistedState";
+
+import light from "./styles/themes/light";
+import dark from "./styles/themes/dark";
+
+import GlobalStyle from "./styles/global";
+
+import Header from "./components/Header";
 import SearchIcon from "@mui/icons-material/Search";
-import Country from "./Country";
+import Country from "./components/Country";
 import { Route, Routes } from "react-router-dom";
-import CountryDetails from "./CountryDetails";
+import CountryDetails from "./components/CountryDetails";
+import { Container } from "./styles/styles";
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
   const [countries, setCountries] = useState([]);
   const countriesInputRef = useRef();
   const regionRef = useRef();
   const navigate = useNavigate();
+
+  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = usePeristedState("theme", light);
+
+  const toggleTheme = () => {
+    setTheme(theme.title === "light" ? dark : light);
+  };
 
   const noCountries = countries.status || countries.message;
 
@@ -98,70 +112,78 @@ function App() {
   };
 
   return (
-    <div className={`app ${darkMode ? "darkMode" : ""}`}>
-      <Header onClick={switchMode} darkMode={darkMode} />
+    <ThemeProvider theme={theme}>
+      <GlobalStyle />
+      <Container>
+        <div className='app'>
+          <Header toggleTheme={toggleTheme} />
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <div className="app_body">
+                  <div className="inputs">
+                    <div
+                      className='search_input'
+                    >
+                      <SearchIcon />
+                      <input
+                        type="text"
+                        placeholder="Buscar país"
+                        ref={countriesInputRef}
+                        onChange={searchCountries}
+                      />
+                    </div>
+                    <div
+                      className='select_region'
+                    >
+                      <select ref={regionRef} onChange={selectRegion}>
+                        <option value={"All"}>Todos</option>
+                        <option value={"africa"}>África</option>
+                        <option value={"americas"}>Américas</option>
+                        <option value={"asia"}>Ásia</option>
+                        <option value={"europe"}>Europa</option>
+                        <option value={"oceania"}>Oceania</option>
+                      </select>
+                    </div>
+                  </div>
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div className="app_body">
-              <div className="inputs">
-                <div className={`search_input ${darkMode ? "darkMode" : ""}`}>
-                  <SearchIcon />
-                  <input
-                    type="text"
-                    placeholder="Buscar país"
-                    ref={countriesInputRef}
-                    onChange={searchCountries}
-                  />
+                  <div className="countries">
+                    {!noCountries ? (
+                      countries.map((country) => (
+                        <Country
+                          key={country.alpha3Code}
+                          code={country.alpha3Code}
+                          name={country.name}
+                          capital={country.capital}
+                          population={country.population}
+                          region={country.region}
+                          flag={country.flags.svg}
+                          showDetails={showDetails}
+                          darkMode={darkMode}
+                        />
+                      ))
+                    ) : (
+                      <p>País não encontrado</p>
+                    )}
+                  </div>
                 </div>
-                <div className={`select_region ${darkMode ? "darkMode" : ""}`}>
-                  <select ref={regionRef} onChange={selectRegion}>
-                    <option value={"All"}>Todos</option>
-                    <option value={"africa"}>África</option>
-                    <option value={"americas"}>Américas</option>
-                    <option value={"asia"}>Ásia</option>
-                    <option value={"europe"}>Europa</option>
-                    <option value={"oceania"}>Oceania</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="countries">
-                {!noCountries ? (
-                  countries.map((country) => (
-                    <Country
-                      key={country.alpha3Code}
-                      code={country.alpha3Code}
-                      name={country.name}
-                      capital={country.capital}
-                      population={country.population}
-                      region={country.region}
-                      flag={country.flags.svg}
-                      showDetails={showDetails}
-                      darkMode={darkMode}
-                    />
-                  ))
-                ) : (
-                  <p>País não encontrado</p>
-                )}
-              </div>
-            </div>
-          }
-        />
-        <Route
-          path="/:countryCode"
-          element={
-            <CountryDetails
-              darkMode={darkMode}
-              countries={countries}
-              refetch={fetchData}
+              }
             />
-          }
-        />
-      </Routes>
-    </div>
+            <Route
+              path="/:countryCode"
+              element={
+                <CountryDetails
+                  darkMode={darkMode}
+                  countries={countries}
+                  refetch={fetchData}
+                />
+              }
+            />
+          </Routes>
+        </div>
+      </Container>
+    </ThemeProvider>
   );
 }
 
